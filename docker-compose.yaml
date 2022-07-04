@@ -1,0 +1,15 @@
+version: '3.8'
+networks:
+  my-network:
+    driver: bridge
+
+services:
+  php-apache-environment:
+    container_name: rubis
+    image: rubis
+    volumes:
+      - ./PHP/:/var/www/html/PHP/
+    ports:
+      - "80:80"
+    networks:
+      - my-network
