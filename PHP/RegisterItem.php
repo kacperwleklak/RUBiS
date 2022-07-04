@@ -38,8 +38,8 @@
 
         $DBQueries = new DBQueries();
         // Add item to database
-        $start = date("Y:m:d H:i:s");
-        $end = date("Y:m:d H:i:s", mktime(date("H"), date("i"), date("s"), date("m"), date("d") + $duration, date("Y")));
+        $start = date("Y-m-d H:i:s");
+        $end = date("Y-m-d H:i:s", mktime(date("H"), date("i"), date("s"), date("m"), date("d") + $duration, date("Y")));
         $DBQueries->insert_items($name, $description, $initialPrice, $qty, $reservePrice, $buyNow, $end, $userId, $categoryId);
 
         printHTMLheader("RUBiS: Selling $name");
