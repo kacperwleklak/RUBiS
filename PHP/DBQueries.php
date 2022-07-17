@@ -15,7 +15,7 @@ class DBQueries {
     }
 
     function insert_users($firstname, $lastname, $nickname, $password, $email, $regionId) {
-        $stmt = $this->connection->prepare("INSERT INTO users VALUES (NULL, :firstname, :lastname, :nickname, :password, :email, 0, 0, NOW(), :regionId);");
+        $stmt = $this->connection->prepare("INSERT INTO users VALUES (DEFAULT, :firstname, :lastname, :nickname, :password, :email, 0, 0, NOW(), :regionId);");
 
         $stmt->bindValue(':firstname', $firstname, PDO::PARAM_STR);
         $stmt->bindValue(':lastname', $lastname, PDO::PARAM_STR);
@@ -28,7 +28,7 @@ class DBQueries {
     }
 
     function insert_items($name, $description, $initialPrice, $qty, $reservePrice, $buyNow, $end, $userId, $categoryId) {
-        $stmt = $this->connection->prepare("INSERT INTO items VALUES (NULL, :name, :description, :initialPrice, :qty, :reservePrice, :buyNow, 0, 0, NOW(), :end, :userId, :categoryId);");
+        $stmt = $this->connection->prepare("INSERT INTO items VALUES (DEFAULT, :name, :description, :initialPrice, :qty, :reservePrice, :buyNow, 0, 0, NOW(), :end, :userId, :categoryId);");
 
         $stmt->bindValue(':name', $name, PDO::PARAM_STR);
         $stmt->bindValue(':description', $description, PDO::PARAM_STR);
@@ -44,100 +44,32 @@ class DBQueries {
     }
 
     function process_comment($from, $to, $itemId, $rating, $comment) {
-        $this->connection->beginTransaction();
-
-        $stmt = $this->connection->prepare("SELECT count(*) AS count FROM users WHERE id=:to");
-        $stmt->bindValue(':to', $to, PDO::PARAM_INT);
-        $stmt->execute();
-        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        if ($result[0]['count'] == 0)
-            return -1;
-
-        $stmt = $this->connection->prepare("UPDATE users SET rating=rating+:rating WHERE id=:to");
-        $stmt->bindValue(':rating', $rating, PDO::PARAM_INT);
-        $stmt->bindValue(':to', $to, PDO::PARAM_INT);
-        $stmt->execute();
-
-        $stmt = $this->connection->prepare("INSERT INTO comments VALUES (NULL, :from, :to, :itemId, :rating, NOW(), :comment);");
-
-        $stmt->bindValue(':from', $from, PDO::PARAM_INT);
-        $stmt->bindValue(':to', $to, PDO::PARAM_INT);
-        $stmt->bindValue(':itemId', $itemId, PDO::PARAM_INT);
+        $stmt = $this->connection->prepare("CALL PROCESS_COMMENT(:from, :to, :itemId, :rating, :comment)");
+        $stmt->bindValue(':from', $from, PDO::PARAM_STR);
+        $stmt->bindValue(':to', $to, PDO::PARAM_STR);
+        $stmt->bindValue(':itemId', $itemId, PDO::PARAM_STR);
         $stmt->bindValue(':rating', $rating, PDO::PARAM_INT);
         $stmt->bindValue(':comment', $comment, PDO::PARAM_STR);
-
         $stmt->execute();
-
-        $this->connection->commit();
         return 1;
     }
 
     function process_bid($itemId, $maxBid, $userId, $qty, $bid) {
-
-        $this->connection->beginTransaction();
-
-        $stmt = $this->connection->prepare("SELECT max_bid FROM items WHERE id=:itemId");
-        $stmt->bindValue(':itemId', $itemId, PDO::PARAM_INT);
-        $stmt->execute();
-        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        if ($maxBid > $result[0]['max_bid']) {
-            $stmt = $this->connection->prepare("UPDATE items SET max_bid=:maxBid WHERE id=:itemId");
-            $stmt->bindValue(':max_bid', $maxBid, PDO::PARAM_INT);
-            $stmt->bindValue(':itemId', $itemId, PDO::PARAM_INT);
-            $stmt->execute();
-        }
-
-        $stmt = $this->connection->prepare("INSERT INTO bids VALUES (NULL, :userId, :itemId, :qty, :bid, :maxBid, NOW())");
-        $stmt->bindValue(':userId', $userId, PDO::PARAM_INT);
-        $stmt->bindValue(':itemId', $itemId, PDO::PARAM_INT);
+        $stmt = $this->connection->prepare("CALL PROCESS_BID(:itemId, :maxBid, :userId, :qty, :bid)");
+        $stmt->bindValue(':userId', $userId, PDO::PARAM_STR);
+        $stmt->bindValue(':itemId', $itemId, PDO::PARAM_STR);
         $stmt->bindValue(':qty', $qty, PDO::PARAM_INT);
         $stmt->bindValue(':bid', $bid, PDO::PARAM_INT);
         $stmt->bindValue(':maxBid', $maxBid, PDO::PARAM_INT);
         $stmt->execute();
-
-        $stmt = $this->connection->prepare("UPDATE items SET nb_of_bids=nb_of_bids+1 WHERE id=:itemId");
-        $stmt->bindValue(':itemId', $itemId, PDO::PARAM_INT);
-        $stmt->execute();
-
-        $this->connection->commit();
     }
 
     function process_buyNow($itemId, $qty, $userId) {
-
-        $this->connection->beginTransaction();
-
-        $stmt = $this->connection->prepare("SELECT * FROM items WHERE items.id=:itemId");
-        $stmt->bindValue(':itemId', $itemId, PDO::PARAM_INT);
-        $stmt->execute();
-        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        if (count($result) == 0)
-            return -1;
-
-        $row = $result[0];
-        $newQty = $row["quantity"] - $qty;
-        if ($newQty == 0) {
-            $stmt = $this->connection->prepare("UPDATE items SET end_date=NOW(),quantity=:newQty WHERE id=:itemId");
-            $stmt->bindValue(':itemId', $itemId, PDO::PARAM_INT);
-            $stmt->bindValue(':newQty', $newQty, PDO::PARAM_INT);
-            $stmt->execute();
-        } else {
-            $stmt = $this->connection->prepare("UPDATE items SET quantity=:newQty WHERE id=:itemId");
-            $stmt->bindValue(':itemId', $itemId, PDO::PARAM_INT);
-            $stmt->bindValue(':newQty', $newQty, PDO::PARAM_INT);
-            $stmt->execute();
-        }
-
-        $stmt = $this->connection->prepare("INSERT INTO buy_now VALUES (NULL, :userId, :itemId, :qty, NOW())");
-        $stmt->bindValue(':itemId', $itemId, PDO::PARAM_INT);
-        $stmt->bindValue(':userId', $userId, PDO::PARAM_INT);
+        $stmt = $this->connection->prepare("CALL BUY_NOW(:itemId, :qty, :userId)");
+        $stmt->bindValue(':itemId', $itemId, PDO::PARAM_STR);
+        $stmt->bindValue(':userId', $userId, PDO::PARAM_STR);
         $stmt->bindValue(':qty', $qty, PDO::PARAM_INT);
         $stmt->execute();
-
-        $this->connection->commit();
-        
         return 1;
     }
 
