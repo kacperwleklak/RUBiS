@@ -2,17 +2,18 @@
 
 class DBConnection {
 
-    protected $host = "localhost";
-    protected $host_type = "mysql";
-    protected $username = "root";
-    protected $password = "";
-    protected $database = "rubis";
+    protected $host = "192.168.1.3";
+    protected $port = "5433";
+    protected $host_type = "pgsql";
+    protected $username = "user";
+    protected $password = "pass";
+    protected $database = "db";
     protected $connection = NULL;
     protected $status = FALSE;
 
     function connect() {
         try {
-            $this->connection = new PDO("$this->host_type:host=$this->host;dbname=$this->database", $this->username, $this->password);
+            $this->connection = new PDO("$this->host_type:host=$this->host;port=$this->port;dbname=$this->database", $this->username, $this->password);
             $this->status = TRUE;
         } catch (PDOException $e) {
             echo $e->getMessage();
