@@ -1,6 +1,7 @@
 <?php
 
 require_once 'DBConnection.php';
+require_once 'UUID.php';
 
 class DBQueries {
 
@@ -15,8 +16,9 @@ class DBQueries {
     }
 
     function insert_users($firstname, $lastname, $nickname, $password, $email, $regionId) {
-        $stmt = $this->connection->prepare("INSERT INTO users VALUES (DEFAULT, :firstname, :lastname, :nickname, :password, :email, 0, 0, NOW(), :regionId);");
+        $stmt = $this->connection->prepare("INSERT INTO users VALUES (:id, :firstname, :lastname, :nickname, :password, :email, 0, 0, NOW(), :regionId);");
 
+        $stmt->bindValue(':id', $this->randomUUID(), PDO::PARAM_STR);
         $stmt->bindValue(':firstname', $firstname, PDO::PARAM_STR);
         $stmt->bindValue(':lastname', $lastname, PDO::PARAM_STR);
         $stmt->bindValue(':nickname', $nickname, PDO::PARAM_STR);
@@ -28,8 +30,9 @@ class DBQueries {
     }
 
     function insert_items($name, $description, $initialPrice, $qty, $reservePrice, $buyNow, $end, $userId, $categoryId) {
-        $stmt = $this->connection->prepare("INSERT INTO items VALUES (DEFAULT, :name, :description, :initialPrice, :qty, :reservePrice, :buyNow, 0, 0, NOW(), :end, :userId, :categoryId);");
+        $stmt = $this->connection->prepare("INSERT INTO items VALUES (:id, :name, :description, :initialPrice, :qty, :reservePrice, :buyNow, 0, 0, NOW(), :end, :userId, :categoryId);");
 
+        $stmt->bindValue(':id', $this->randomUUID(), PDO::PARAM_STR);
         $stmt->bindValue(':name', $name, PDO::PARAM_STR);
         $stmt->bindValue(':description', $description, PDO::PARAM_STR);
         $stmt->bindValue(':initialPrice', $initialPrice, PDO::PARAM_STR);
@@ -44,7 +47,8 @@ class DBQueries {
     }
 
     function process_comment($from, $to, $itemId, $rating, $comment) {
-        $stmt = $this->connection->prepare("CALL PROCESS_COMMENT(:from, :to, :itemId, :rating, :comment)");
+        $stmt = $this->connection->prepare("CALL PROCESS_COMMENT(:commentId, :from, :to, :itemId, :rating, :comment)");
+        $stmt->bindValue(':commentId', $this->randomUUID(), PDO::PARAM_STR);
         $stmt->bindValue(':from', $from, PDO::PARAM_STR);
         $stmt->bindValue(':to', $to, PDO::PARAM_STR);
         $stmt->bindValue(':itemId', $itemId, PDO::PARAM_STR);
@@ -55,7 +59,8 @@ class DBQueries {
     }
 
     function process_bid($itemId, $maxBid, $userId, $qty, $bid) {
-        $stmt = $this->connection->prepare("CALL PROCESS_BID(:itemId, :maxBid, :userId, :qty, :bid)");
+        $stmt = $this->connection->prepare("CALL PROCESS_BID(:bidId, :itemId, :maxBid, :userId, :qty, :bid)");
+        $stmt->bindValue(':bidId', $this->randomUUID(), PDO::PARAM_STR);
         $stmt->bindValue(':userId', $userId, PDO::PARAM_STR);
         $stmt->bindValue(':itemId', $itemId, PDO::PARAM_STR);
         $stmt->bindValue(':qty', $qty, PDO::PARAM_INT);
@@ -65,7 +70,8 @@ class DBQueries {
     }
 
     function process_buyNow($itemId, $qty, $userId) {
-        $stmt = $this->connection->prepare("CALL BUY_NOW(:itemId, :qty, :userId)");
+        $stmt = $this->connection->prepare("CALL BUY_NOW(:buyNowId, :itemId, :qty, :userId)");
+        $stmt->bindValue(':buyNowId', $this->randomUUID(), PDO::PARAM_STR);
         $stmt->bindValue(':itemId', $itemId, PDO::PARAM_STR);
         $stmt->bindValue(':userId', $userId, PDO::PARAM_STR);
         $stmt->bindValue(':qty', $qty, PDO::PARAM_INT);
@@ -319,6 +325,10 @@ class DBQueries {
         $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         return $result;
+    }
+
+    private function randomUUID() : string {
+        return UUID::generate();
     }
 
 }

@@ -9,10 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.lang.Runtime;
-import java.net.URL;
 import java.util.GregorianCalendar;
-import java.util.Random;
-import java.util.Vector;
 
 /**
  * RUBiS client emulator.
@@ -109,7 +106,7 @@ public class ClientEmulator
       cmd[2] = rubis.getMonitoringProgram()+" "+rubis.getMonitoringOptions()+" "+
         rubis.getMonitoringSampling()+" "+fullTimeInSec+" > "+outputFileName;
 
-      String command = "sh " + "bench/monitor.sh " + cmd[1] + " " + rubis.getMonitoringSampling() + " " +fullTimeInSec + " " + outputFileName;
+      String command = "sh " + "Client/bench/monitor.sh " + cmd[1] + " " + rubis.getMonitoringSampling() + " " +fullTimeInSec + " " + outputFileName;
       System.out.println("&nbsp &nbsp Command is: "+command+"<br>\n");
 
       return Runtime.getRuntime().exec(command);
@@ -133,7 +130,7 @@ public class ClientEmulator
     try
     {
       File dir = new File(".");
-      String nodeInfoProgram = dir.getCanonicalPath()+"/bench/node_info.sh";
+      String nodeInfoProgram = dir.getCanonicalPath()+ "/Client/bench/node_info.sh";
 
       String[] cmd = new String[4];
       cmd[0] = rubis.getMonitoringRsh();
@@ -546,7 +543,7 @@ public class ClientEmulator
       try
       {
         String[] cmd = new String[4];
-        cmd[0] = "bench/generate_graphs.sh";
+        cmd[0] = "Client/bench/generate_graphs.sh";
         cmd[1] = reportDir;
         cmd[2] = client.rubis.getGnuPlotTerminal();
         cmd[3] = Integer.toString(client.rubis.getRemoteClients().size()+1);
@@ -603,7 +600,7 @@ public class ClientEmulator
       try
       {
         String[] cmd = new String[6];
-        cmd[0] = "bench/compute_global_stats.awk";
+        cmd[0] = "Client/bench/compute_global_stats.awk";
         cmd[1] = "-v";
         cmd[2] = "path="+reportDir;
         cmd[3] = "-v";

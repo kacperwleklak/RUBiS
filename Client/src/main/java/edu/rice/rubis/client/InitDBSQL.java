@@ -1,14 +1,15 @@
 package edu.rice.rubis.client;
 
-import java.io.File;
 import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.lang.Thread;
 import java.lang.reflect.Array;
 import java.net.URL;
-import java.util.*;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * This program initializes the RUBiS database according to the rubis.properties file
@@ -21,8 +22,8 @@ import java.text.SimpleDateFormat;
 public class InitDBSQL {
 
     public static Connection getConnection() throws SQLException {
-        String DB_CONN_STRING = "jdbc:mysql://localhost:3306/rubis?useSSL=true&serverTimezone=UTC&rewriteBatchedStatements=true";
-        String DRIVER_CLASS_NAME = "com.mysql.cj.jdbc.Driver";
+        String DB_CONN_STRING = "jdbc:postgresql://192.168.1.3:5433/rubis?serverTimezone=UTC&rewriteBatchedStatements=true";
+        String DRIVER_CLASS_NAME = "org.postgresql.Driver";
         String USER_NAME = "root";
         String PASSWORD = "";
 
@@ -48,6 +49,8 @@ public class InitDBSQL {
     private Random rand = new Random();
     private RUBiSProperties rubis = null;
     private int[] itemsPerCategory;
+
+    private List<String> usersIds;
 
 
     /**
@@ -93,12 +96,19 @@ public class InitDBSQL {
         for (int i = 0; i < argc; i++)
             params = params + " " + args[i];
 
-        if ((params.indexOf("users") != -1) || (params.indexOf("all") != -1))
+        boolean generateAll = params.contains("all");
+        boolean generateUsers = params.contains("users");
+        boolean generateItems = params.contains("items");
+        boolean generateBids = params.contains("bids");
+        boolean generateComments = params.contains("comments");
+
+
+        if (generateUsers || generateAll)
             initDB.generateUsers();
 
-        if ((params.indexOf("items") != -1) || (params.indexOf("bids") != -1) ||
-                (params.indexOf("comments") != -1) || (params.indexOf("all") != -1))
-            initDB.generateItems((params.indexOf("bids") != -1) || (params.indexOf("all") != -1), (params.indexOf("comments") != -1) || (params.indexOf("all") != -1));
+        if (generateItems || generateBids || generateComments || generateAll) {
+            initDB.generateItems(generateBids || generateAll, generateComments || generateAll);
+        }
     }
 
 
@@ -107,6 +117,7 @@ public class InitDBSQL {
      * given in the database.properties file.
      */
     public void generateUsers() {
+        String userId;
         String firstname;
         String lastname;
         String nickname;
@@ -117,6 +128,7 @@ public class InitDBSQL {
         int i;
         URL url;
         int regionNameId;
+        usersIds = new ArrayList<>();
 
         // Cache variables
         int getNbOfUsers = rubis.getNbOfUsers();
@@ -124,12 +136,11 @@ public class InitDBSQL {
         Connection c;
         try {
             c = InitDBSQL.getConnection();
-
-            c.setAutoCommit(false);
-            PreparedStatement ps = c.prepareStatement("INSERT INTO users VALUES (DEFAULT, ?, ?, ?, ?, ?, 0, 0, NOW(), ?)");
+            PreparedStatement ps = c.prepareStatement("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, 0, 0, NOW(), ?)");
 
             System.out.print("Generating " + getNbOfUsers + " users ");
             for (i = 0; i < getNbOfUsers; i++) {
+                userId = UUID.randomUUID().toString();
                 firstname = "Great" + (i + 1);
                 lastname = "User" + (i + 1);
                 nickname = "user" + (i + 1);
@@ -138,16 +149,17 @@ public class InitDBSQL {
                 regionName = (String) rubis.getRegions().elementAt(i % getNbOfRegions);
                 regionNameId = i % getNbOfRegions;
 
-                ps.setString(1, firstname);
-                ps.setString(2, lastname);
-                ps.setString(3, nickname);
-                ps.setString(4, password);
-                ps.setString(5, email);
-                ps.setInt(6, regionNameId);
+                ps.setString(1, userId);
+                ps.setString(2, firstname);
+                ps.setString(3, lastname);
+                ps.setString(4, nickname);
+                ps.setString(5, password);
+                ps.setString(6, email);
+                ps.setInt(7, regionNameId);
                 ps.addBatch();
+                usersIds.add(userId);
             }
             ps.executeBatch();
-            c.setAutoCommit(true);
         } catch (Exception e) {
             System.err.println("Error while generating users: " + e.getMessage());
         }
@@ -169,7 +181,7 @@ public class InitDBSQL {
         int duration;
         int quantity;
         int categoryId;
-        int sellerId;
+        String sellerId;
         int oldItems = rubis.getNbOfOldItems();
         int activeItems = rubis.getTotalActiveItems();
         int totalItems = oldItems + activeItems;
@@ -229,7 +241,6 @@ public class InitDBSQL {
 
         try {
             c = InitDBSQL.getConnection();
-            //c.setAutoCommit(false);                   //(NULL, :name, :description, :initialPrice, :qty, :reservePrice, :buyNow, 0, 0, NOW(), :end, :userId, :categoryId)
             PreparedStatement ps_items = c.prepareStatement("INSERT INTO items VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             PreparedStatement ps_old_items = c.prepareStatement("INSERT INTO old_items VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             PreparedStatement ps = null;
@@ -238,6 +249,9 @@ public class InitDBSQL {
             PreparedStatement ps_user_update = c.prepareStatement("UPDATE users SET rating=rating+? WHERE id=?");
 
             for (i = 0; i < totalItems; i++) {
+                if (i % 10 == 0) {
+                    System.out.println("Generating " + i + " / " + totalItems + " items");
+                }
                 // Generate the item
                 name = "RUBiS automatically generated item #" + (i + 1);
                 int descriptionLength = rand.nextInt(getItemDescriptionLength) + 1;
@@ -285,15 +299,17 @@ public class InitDBSQL {
                     categoryId = (categoryId + 1) % getNbOfCategories;
                 if (i >= oldItems)
                     itemsPerCategory[categoryId]--;
-                sellerId = rand.nextInt(getNbOfUsers) + 1;
+                sellerId = getRandomUserId();
 
 
                 Calendar now = Calendar.getInstance();
 
-                String start = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss").format(now.getTime());
+                String start = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(now.getTime());
                 now.add(Calendar.DATE, duration);
-                String end = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss").format(now.getTime());
-                ps.setInt(1, i+1);
+                String end = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(now.getTime());
+                String itemId = UUID.randomUUID().toString();
+
+                ps.setString(1, itemId);
                 ps.setString(2, name);
                 ps.setString(3, description);
                 ps.setFloat(4, initialPrice);
@@ -304,23 +320,21 @@ public class InitDBSQL {
                 ps.setString(10, start);
                 ps.setString(11, end);
 
-                ps.setInt(12, sellerId);
+                ps.setString(12, sellerId);
                 ps.setInt(13, categoryId + 1);
 
-                nbBids=0;
+                nbBids = 0;
                 float maxBid = 0;
                 if (generateBids) { // Now deal with the bids
                     nbBids = rand.nextInt(getMaxBidsPerItem);
                     for (j = 0; j < nbBids; j++) {
                         int addBid = rand.nextInt(10) + 1;
-
-                        int itemId = i+1;
-                        int userId = rand.nextInt(getNbOfUsers) + 1;
+                        String userId = getRandomUserId();
                         float bid = initialPrice + addBid;
                         maxBid = Math.max(maxBid, bid);
 
-                        ps_bids.setInt(1, userId);
-                        ps_bids.setInt(2, itemId);
+                        ps_bids.setString(1, userId);
+                        ps_bids.setString(2, itemId);
                         ps_bids.setInt(3, rand.nextInt(quantity) + 1); //qty
                         ps_bids.setFloat(4, bid); //bid
                         ps_bids.setFloat(5, maxBid);
@@ -345,21 +359,20 @@ public class InitDBSQL {
                     }
                     comment += staticComment[rating].substring(0, commentLength);
 
-                    int itemId = i+1;
-                    int userId = rand.nextInt(getNbOfUsers) + 1;
+                    String userId = getRandomUserId();
 
-                    ps_comments.setInt(1, userId);
-                    ps_comments.setInt(2, sellerId);
-                    ps_comments.setInt(3, itemId);
+                    ps_comments.setString(1, userId);
+                    ps_comments.setString(2, sellerId);
+                    ps_comments.setString(3, itemId);
                     ps_comments.setInt(4, ratingValue[rating]);
                     ps_comments.setString(5, comment);
                     ps_comments.addBatch();
 
                     ps_user_update.setInt(1, ratingValue[rating]);
-                    ps_user_update.setInt(2, sellerId);
+                    ps_user_update.setString(2, sellerId);
                     ps_user_update.addBatch();
                 }
-                if(i % BATCH_SIZE == BATCH_SIZE -1){
+                if (i % BATCH_SIZE == BATCH_SIZE - 1) {
                     System.out.print(".");
                     ps_items.executeBatch();
                     ps_old_items.executeBatch();
@@ -376,7 +389,6 @@ public class InitDBSQL {
                 ps_comments.executeBatch();
                 ps_user_update.executeBatch();
             }
-            //c.setAutoCommit(true);
         } catch (Exception e) {
             System.err.println("Error while generating items: " + e.getMessage());
         }
@@ -436,6 +448,10 @@ public class InitDBSQL {
             System.err.println("Unable to close URL " + url + " (" + ioe.getMessage() + ")");
         }
         return HTMLReply;
+    }
+
+    private String getRandomUserId() {
+        return usersIds.get(rand.nextInt(usersIds.size()));
     }
 
 }

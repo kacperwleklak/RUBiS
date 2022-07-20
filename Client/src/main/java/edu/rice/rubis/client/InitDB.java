@@ -1,6 +1,5 @@
 package edu.rice.rubis.client;
 
-import java.io.File;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.lang.Thread;

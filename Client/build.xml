@@ -55,7 +55,7 @@
       <fileset dir="${dist}" includes="rubis_client.jar"/>
     </delete>
     <delete>
-      <fileset dir="edu" includes="**/*.class"/>
+      <fileset dir="src/edu" includes="**/*.class"/>
     </delete>
   </target>
 
