@@ -1,12 +1,12 @@
 # Build maven project
 FROM maven:3.8.5-openjdk-11-slim AS build
 
-COPY ./src /usr/src/app/src
-COPY ./pom.xml /usr/src/app/pom.xml
+COPY ./Client/src /usr/src/app/src
+COPY ./Client/pom.xml /usr/src/app/pom.xml
 
 RUN mvn -f /usr/src/app/pom.xml clean package
 
-FROM ubuntu:bionic
+FROM adoptopenjdk/openjdk11:latest
 
 RUN apt-get update
 
@@ -19,11 +19,14 @@ RUN apt install openssh-server sudo -y
 RUN useradd -rm -d /home/ubuntu -s /bin/bash -g root -G sudo -u 1000 test
 RUN  echo 'test:test' | chpasswd
 RUN service ssh start
+RUN ssh-keygen -t rsa -q -f "/root/.ssh/id_rsa" -N ""
 
 # Copy files
 RUN mkdir ./Client
-ADD ./bench/** ./Client/bench/
+ADD ./Client/bench/** ./Client/bench/
 COPY --from=build /usr/src/app/target/RUBIS-Client-*.jar ./Client/RUBiS-client-emulator.jar
+ADD ./database ./database
+ADD ./workload ./workload
 
 EXPOSE 22
 

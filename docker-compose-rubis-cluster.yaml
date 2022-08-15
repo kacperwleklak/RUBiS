@@ -1,0 +1,77 @@
+version: '3.8'
+networks:
+  "rubis-cluster":
+    external: true
+
+services:
+  client-main:
+    hostname: rubis-c-main
+    container_name: rubis-cluster-c-main
+    image: rubis/client
+    networks:
+      - rubis-cluster
+    environment:
+      - RUBIS_workload_remote_client_nodes=test@rubis-c1,test@rubis-c2,test@rubis-c3
+      - RUBIS_database_server=creek1
+      - RUBIS_httpd_hostname=rubis-backend
+
+  client1:
+    hostname: rubis-c1
+    container_name: rubis-cluster-c1
+    image: rubis/client
+    networks:
+      - rubis-cluster
+    environment:
+      - RUBIS_httpd_hostname=rubis-backend
+
+  client2:
+    hostname: rubis-c2
+    container_name: rubis-cluster-c2
+    image: rubis/client
+    networks:
+      - rubis-cluster
+    environment:
+      - RUBIS_httpd_hostname=rubis-backend
+
+  client3:
+    hostname: rubis-c3
+    container_name: rubis-cluster-c3
+    image: rubis/client
+    networks:
+      - rubis-cluster
+    environment:
+      - RUBIS_httpd_hostname=rubis-backend
+
+  php-apache-environment:
+    hostname: rubis-backend
+    container_name: rubis-cluster-backend
+    image: rubis/backend
+    networks:
+      - rubis-cluster
+    volumes:
+      - ./PHP/:/var/www/html/PHP/
+    ports:
+      - "80:80"
+    environment:
+      - RUBIS_DB_HOST=creek1
+      - RUBIS_DB_PORT=5432
+      - RUBIS_DB_HOST_TYPE=pgsql
+      - RUBIS_DB_USERNAME=user
+      - RUBIS_DB_PASSWORD=pass
+      - RUBIS_DB_DATABASE=db
+
+  creek1:
+    image: kacperwleklak/creek
+    hostname: creek1
+    networks:
+      - rubis-cluster
+    ports:
+      - "8080:8080"
+      - "5433:5432"
+    environment:
+      - PG_PORT=5432
+      - DBNAME=creek
+      - COMMUNICATION_REPLICAS_PORT=10001
+      - COMMUNICATION_REPLICAS_HOST=creek1
+      - SERVER_PORT=8080
+      - COMMUNICATION_REPLICAS_NODES=creek1:10001

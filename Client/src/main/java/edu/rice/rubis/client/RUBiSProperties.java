@@ -2,9 +2,7 @@ package edu.rice.rubis.client;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.util.ResourceBundle;
-import java.util.StringTokenizer;
-import java.util.Vector;
+import java.util.*;
 
 /**
  * This program check and get all information for the rubis.properties file
@@ -16,7 +14,10 @@ import java.util.Vector;
 
 public class RUBiSProperties
 {
+  public static final String ENV_VAR_PREFIX = "RUBIS_";
+
   private static ResourceBundle configuration = null;
+  private final static Map<String, String> environment = System.getenv();
   private URLGenerator          urlGen = null;
 
   // Information about web server
@@ -80,6 +81,9 @@ public class RUBiSProperties
   private Integer monitoringSampling;
   private String  monitoringRsh;
   private String  monitoringGnuPlot;
+
+  //InitDBSQL
+  private String initdbsqlDbConnection;
   
   /**
    * Creates a new <code>RUBiSProperties</code> instance.
@@ -133,10 +137,13 @@ public class RUBiSProperties
    */
   protected String getProperty(String property)
   {
-    String s = configuration.getString(property);
-    return s;
+    return getEnvVariable(property)
+            .orElse(configuration.getString(property));
   }
 
+  private Optional<String> getEnvVariable(String envName) {
+    return Optional.ofNullable(environment.get(ENV_VAR_PREFIX + envName));
+  }
 
   /**
    * Check for all needed fields in rubis.properties and inialize corresponding values.
@@ -184,6 +191,10 @@ public class RUBiSProperties
       System.out.print("PHP Script files path : ");
       PHPScriptPath  = getProperty("php_script_path");
       System.out.println(PHPScriptPath+"<br><br>");
+
+      initdbsqlDbConnection = getProperty("initdbsql_db_connection");
+      System.out.println("Initialization DB String     : ");
+      System.out.println(initdbsqlDbConnection+"<br>");
       
       // # Workload
       System.out.println("\n<h3><br>### Workload ###</h3>");
@@ -832,4 +843,8 @@ public class RUBiSProperties
     return monitoringGnuPlot;
   }
 
+
+  public String getInitdbsqlDbConnection() {
+    return initdbsqlDbConnection;
+  }
 }

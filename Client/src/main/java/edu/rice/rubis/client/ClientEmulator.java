@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.lang.Runtime;
+import java.util.Arrays;
 import java.util.GregorianCalendar;
 
 /**
@@ -173,10 +174,12 @@ public class ClientEmulator
     boolean           isMainClient = (args.length <= 1); // Check if we are the main client
     String            propertiesFileName;
 
+    System.out.println("Args:" + Arrays.toString(args));
     if (isMainClient)
     {
       // Start by creating a report directory and redirecting output to an index.html file
       System.out.println("RUBiS client emulator - (C) Rice University/INRIA 2001\n");
+      System.out.println("Args:" + Arrays.toString(args));
       reportDir = "bench/"+TimeManagement.currentDateToString()+"/";
       reportDir = reportDir.replace(' ', '@');
       try
@@ -258,19 +261,19 @@ public class ClientEmulator
       }
 
       // Start monitoring programs
-      System.out.println("<CENTER></A><A NAME=\"trace\"><h2>*** Monitoring ***</h2></CENTER>");
-
-      // Monitor Web server
-      System.out.println("ClientEmulator: Starting monitoring program on Web server "+client.rubis.getWebServerName()+"<br>\n");
-      webServerMonitor = client.startMonitoringProgram(client.rubis.getWebServerName(), reportDir+"web_server");
-
-      // Monitor Database server
-      System.out.println("ClientEmulator: Starting monitoring program on Database server "+client.rubis.getDBServerName()+"<br>\n");
-      dbServerMonitor = client.startMonitoringProgram(client.rubis.getDBServerName(), reportDir+"db_server");
-
-      // Monitor local client
-      System.out.println("ClientEmulator: Starting monitoring program locally on client<br>\n");
-      clientMonitor = client.startMonitoringProgram("localhost", reportDir+"client0");
+//      System.out.println("<CENTER></A><A NAME=\"trace\"><h2>*** Monitoring ***</h2></CENTER>");
+//
+//      // Monitor Web server
+//      System.out.println("ClientEmulator: Starting monitoring program on Web server "+client.rubis.getWebServerName()+"<br>\n");
+//      webServerMonitor = client.startMonitoringProgram(client.rubis.getWebServerName(), reportDir+"web_server");
+//
+//      // Monitor Database server
+//      System.out.println("ClientEmulator: Starting monitoring program on Database server "+client.rubis.getDBServerName()+"<br>\n");
+//      dbServerMonitor = client.startMonitoringProgram(client.rubis.getDBServerName(), reportDir+"db_server");
+//
+//      // Monitor local client
+//      System.out.println("ClientEmulator: Starting monitoring program locally on client<br>\n");
+//      clientMonitor = client.startMonitoringProgram("localhost", reportDir+"client0");
 
       remoteClientMonitor = new Process[client.rubis.getRemoteClients().size()];
       // Monitor remote clients
@@ -454,8 +457,8 @@ public class ClientEmulator
       client.printNodeInformation(client.rubis.getDBServerName());
 
       // Client
-      System.out.println("<br><B>Local client</B><br>");
-      client.printNodeInformation("localhost");
+//      System.out.println("<br><B>Local client</B><br>");
+//      client.printNodeInformation("localhost");
 
       // Remote Clients
       for (int i = 0 ; i < client.rubis.getRemoteClients().size() ; i++)

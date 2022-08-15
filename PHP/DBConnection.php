@@ -1,17 +1,29 @@
 <?php
 
-class DBConnection {
+class DBConnection
+{
 
-    protected $host = "192.168.1.3";
-    protected $port = "5433";
-    protected $host_type = "pgsql";
-    protected $username = "user";
-    protected $password = "pass";
-    protected $database = "db";
+    protected $host = NULL;
+    protected $port = NULL;
+    protected $host_type = NULL;
+    protected $username = NULL;
+    protected $password = NULL;
+    protected $database = NULL;
     protected $connection = NULL;
     protected $status = FALSE;
 
-    function connect() {
+    function __construct()
+    {
+        $this->host = getenv("RUBIS_DB_HOST");
+        $this->port = getenv("RUBIS_DB_PORT");
+        $this->host_type = getenv("RUBIS_DB_HOST_TYPE");
+        $this->username = getenv("RUBIS_DB_USERNAME");
+        $this->password = getenv("RUBIS_DB_PASSWORD");
+        $this->database = getenv("RUBIS_DB_DATABASE");
+    }
+
+    function connect()
+    {
         try {
             $this->connection = new PDO("$this->host_type:host=$this->host;port=$this->port;dbname=$this->database", $this->username, $this->password);
             $this->status = TRUE;
@@ -22,20 +34,24 @@ class DBConnection {
         }
     }
 
-    function close_connection() {
+    function close_connection()
+    {
         $this->connection = NULL;
         $this->status = FALSE;
     }
 
-    function get_connection() {
+    function get_connection()
+    {
         return $this->connection;
     }
 
-    function get_status() {
+    function get_status()
+    {
         return $this->status;
     }
 
-    function get_host_type(){
+    function get_host_type()
+    {
         return $this->host_type;
     }
 

@@ -21,24 +21,24 @@ import java.util.*;
 
 public class InitDBSQL {
 
-    public static Connection getConnection() throws SQLException {
-        String DB_CONN_STRING = "jdbc:postgresql://192.168.1.3:5433/rubis?serverTimezone=UTC&rewriteBatchedStatements=true";
+    public Connection getConnection() throws SQLException {
+        String DB_CONN_STRING = rubis.getInitdbsqlDbConnection();
         String DRIVER_CLASS_NAME = "org.postgresql.Driver";
         String USER_NAME = "root";
-        String PASSWORD = "";
+        String PASSWORD = "s";
 
         Connection result = null;
         try {
             Class.forName(DRIVER_CLASS_NAME).newInstance();
         } catch (Exception ex) {
-            System.err.println(ex.getMessage());
+            ex.printStackTrace();
             return result;
         }
 
         try {
             result = DriverManager.getConnection(DB_CONN_STRING, USER_NAME, PASSWORD);
         } catch (SQLException e) {
-            System.err.println(e.getMessage());
+            e.printStackTrace();
             return null;
         }
         return result;
@@ -56,8 +56,8 @@ public class InitDBSQL {
     /**
      * Creates a new <code>InitDB</code> instance.
      */
-    public InitDBSQL() {
-        rubis = new RUBiSProperties();
+    public InitDBSQL(String configFile) {
+        rubis = new RUBiSProperties(configFile);
         urlGen = rubis.checkPropertiesFileAndGetURLGenerator();
         if (urlGen == null)
             Runtime.getRuntime().exit(1);
@@ -77,7 +77,6 @@ public class InitDBSQL {
     public static void main(String[] args) {
         System.out.println("RUBiS database initialization - (C) Rice University/INRIA 2001\n");
 
-        InitDBSQL initDB = new InitDBSQL();
         int argc = Array.getLength(args);
         String params = "";
 
@@ -93,15 +92,22 @@ public class InitDBSQL {
             Runtime.getRuntime().exit(1);
         }
 
-        for (int i = 0; i < argc; i++)
-            params = params + " " + args[i];
+        String configFile = "rubis";
+        for (int i = 0; i < argc; i++) {
+            String arg = args[i];
+            params = params + " " + arg;
+            if (arg.equalsIgnoreCase("-config")) {
+                configFile = args[i+1];
+            }
+        }
+
+        InitDBSQL initDB = new InitDBSQL(configFile);
 
         boolean generateAll = params.contains("all");
         boolean generateUsers = params.contains("users");
         boolean generateItems = params.contains("items");
         boolean generateBids = params.contains("bids");
         boolean generateComments = params.contains("comments");
-
 
         if (generateUsers || generateAll)
             initDB.generateUsers();
@@ -135,11 +141,11 @@ public class InitDBSQL {
         int getNbOfRegions = rubis.getNbOfRegions();
         Connection c;
         try {
-            c = InitDBSQL.getConnection();
+            c = getConnection();
             PreparedStatement ps = c.prepareStatement("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, 0, 0, NOW(), ?)");
-
             System.out.print("Generating " + getNbOfUsers + " users ");
             for (i = 0; i < getNbOfUsers; i++) {
+
                 userId = UUID.randomUUID().toString();
                 firstname = "Great" + (i + 1);
                 lastname = "User" + (i + 1);
@@ -162,6 +168,7 @@ public class InitDBSQL {
             ps.executeBatch();
         } catch (Exception e) {
             System.err.println("Error while generating users: " + e.getMessage());
+            e.printStackTrace();
         }
         System.out.println("Done!");
     }
@@ -237,10 +244,10 @@ public class InitDBSQL {
             System.out.println("Generating 1 comment per item");
 
         Connection c;
-        int BATCH_SIZE = 1000;
+        int BATCH_SIZE = 100;
 
         try {
-            c = InitDBSQL.getConnection();
+            c = getConnection();
             PreparedStatement ps_items = c.prepareStatement("INSERT INTO items VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             PreparedStatement ps_old_items = c.prepareStatement("INSERT INTO old_items VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             PreparedStatement ps = null;
@@ -391,6 +398,7 @@ public class InitDBSQL {
             }
         } catch (Exception e) {
             System.err.println("Error while generating items: " + e.getMessage());
+            e.printStackTrace();
         }
         System.out.println(" Done!");
     }

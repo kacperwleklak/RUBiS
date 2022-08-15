@@ -1,0 +1,22 @@
+version: '3.8'
+networks:
+  my-network:
+    driver: bridge
+
+services:
+  php-apache-environment:
+    container_name: rubis-backend
+    image: rubis/backend
+    volumes:
+      - ./PHP/:/var/www/html/PHP/
+    ports:
+      - "80:80"
+    networks:
+      - my-network
+    environment:
+      - RUBIS_DB_HOST=192.168.18.84
+      - RUBIS_DB_PORT=5433
+      - RUBIS_DB_HOST_TYPE=pgsql
+      - RUBIS_DB_USERNAME=user
+      - RUBIS_DB_PASSWORD=pass
+      - RUBIS_DB_DATABASE=db
