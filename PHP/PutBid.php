@@ -41,7 +41,7 @@
         $row = $result[0];
         $maxBidResult = $DBQueries->selectMaxItemBid($row["id"]);
         $maxBidRow = $maxBidResult[0];
-        $maxBid = $maxBidRow["bid"];
+        $maxBid = $maxBidRow;
         if ($maxBid == 0) {
             $maxBid = $row["initial_price"];
             $buyNow = $row["buy_now"];

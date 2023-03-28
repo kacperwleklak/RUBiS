@@ -161,6 +161,8 @@ public abstract class URLGenerator
    */
   public abstract String ViewUserInfoScript();
 
+  public abstract String Users();
+
 
   /**
    * Set the name and port of the Web site running RUBiS as well as the
@@ -501,7 +503,7 @@ public abstract class URLGenerator
    *
    * @return 'View Item' script URL
    */
-  public URL viewItem(int itemId)
+  public URL viewItem(String itemId)
   {
     try
     {
@@ -521,7 +523,7 @@ public abstract class URLGenerator
    *
    * @return 'View Bid History' script URL
    */
-  public URL viewBidHistory(int itemId)
+  public URL viewBidHistory(String itemId)
   {
     try
     {
@@ -541,7 +543,7 @@ public abstract class URLGenerator
    *
    * @return 'View User Information' script URL
    */
-  public URL viewUserInformation(int userId)
+  public URL viewUserInformation(String userId)
   {
     try
     {
@@ -569,7 +571,7 @@ public abstract class URLGenerator
    *
    * @return 'Comment on an user' script URL
    */
-  public URL putCommentAuth(int itemId, int toId)
+  public URL putCommentAuth(String itemId, String toId)
   {
     try
     {
@@ -593,7 +595,7 @@ public abstract class URLGenerator
    *
    * @return 'Put Comment on another user' script URL
    */
-  public URL putComment(int itemId, int toId, String name, String pwd)
+  public URL putComment(String itemId, String toId, String name, String pwd)
   {
     try
     {
@@ -619,7 +621,7 @@ public abstract class URLGenerator
    *
    * @return 'Store Comment' script URL
    */
-  public URL storeComment(int itemId, int toId, int fromId, int rating, String comment)
+  public URL storeComment(String itemId, String toId, String fromId, int rating, String comment)
   {
     try
     {
@@ -646,7 +648,7 @@ public abstract class URLGenerator
    *
    * @return 'Bid Now' script URL
    */
-  public URL putBidAuth(int itemId)
+  public URL putBidAuth(String itemId)
   {
     try
     {
@@ -670,7 +672,7 @@ public abstract class URLGenerator
    *
    * @return 'Put Bid' script URL
    */
-  public URL putBid(int itemId, String name, String pwd)
+  public URL putBid(String itemId, String name, String pwd)
   {
     try
     {
@@ -698,7 +700,7 @@ public abstract class URLGenerator
    *
    * @return 'Store Bid' script URL
    */
-  public URL storeBid(int itemId, int userId, float minBid, float bid, float maxBid, int qty, int maxQty)
+  public URL storeBid(String itemId, String userId, float minBid, float bid, float maxBid, int qty, int maxQty)
   {
     try
     {
@@ -724,7 +726,7 @@ public abstract class URLGenerator
    *
    * @return 'Buy Now' script URL
    */
-  public URL buyNowAuth(int itemId)
+  public URL buyNowAuth(String itemId)
   {
     try
     {
@@ -746,7 +748,7 @@ public abstract class URLGenerator
    *
    * @return 'Buy Now' script URL
    */
-  public URL buyNow(int itemId, String name, String pwd)
+  public URL buyNow(String itemId, String name, String pwd)
   {
     try
     {
@@ -769,7 +771,7 @@ public abstract class URLGenerator
    * @param userId user's identifier
    * @return 'Store Buy Now' script URL
    */
-  public URL storeBuyNow(int itemId, int userId, int qty, int maxQty)
+  public URL storeBuyNow(String itemId, String userId, int qty, int maxQty)
   {
     try
     {
@@ -840,7 +842,7 @@ public abstract class URLGenerator
    *
    * @return 'Sell item form' script URL
    */
-  public URL sellItemForm(int categoryId, int userId)
+  public URL sellItemForm(int categoryId, String userId)
   {
     try
     {
@@ -870,7 +872,7 @@ public abstract class URLGenerator
    */
   public URL registerItem(String name, String description, float initialPrice, 
                          float reservePrice, float buyNow, int duration,
-                         int quantity, int userId, int categoryId)
+                         int quantity, String userId, int categoryId)
   {
     try
     {
@@ -928,6 +930,19 @@ public abstract class URLGenerator
       pwd  = URLEncoder.encode(pwd);
       URL url = new URL(protocol, webSiteName, webSitePort, scriptPath+"/"+AboutMeScript()+"?nickname="+name+"&password="+pwd);
       return url;
+    }
+    catch (java.net.MalformedURLException e)
+    {
+      System.out.println("Error while generating 'About Me' script URL: "+e.getMessage());
+      return null;
+    }
+  }
+
+  public URL getUsers()
+  {
+    try
+    {
+      return new URL(protocol, webSiteName, webSitePort, scriptPath+"/"+Users());
     }
     catch (java.net.MalformedURLException e)
     {

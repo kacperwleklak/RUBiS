@@ -19,6 +19,7 @@ public class RUBiSProperties
   private static ResourceBundle configuration = null;
   private final static Map<String, String> environment = System.getenv();
   private URLGenerator          urlGen = null;
+  private Arguments             args   = null;
 
   // Information about web server
   private String webSiteName;
@@ -84,6 +85,7 @@ public class RUBiSProperties
 
   //InitDBSQL
   private String initdbsqlDbConnection;
+  private String usersFile;
   
   /**
    * Creates a new <code>RUBiSProperties</code> instance.
@@ -128,6 +130,12 @@ public class RUBiSProperties
     }
   }
 
+  public RUBiSProperties(Arguments arguments)
+  {
+    this(arguments.getProperties());
+    this.args = arguments;
+  }
+
   
   /**
    * Returns the value corresponding to a property in the rubis.properties file.
@@ -158,11 +166,18 @@ public class RUBiSProperties
       // # HTTP server information
       System.out.println("\n<h3>### HTTP server information ###</h3>");
       System.out.print("Server name       : ");
-      webSiteName  = getProperty("httpd_hostname");
+      if (args != null && args.getHost() != null && !args.getHost().isBlank()) {
+        webSiteName  = args.getHost();
+      } else {
+        webSiteName  = getProperty("httpd_hostname");
+      }
       System.out.println(webSiteName+"<br>");
       System.out.print("Server port       : ");
-      Integer foo  = new Integer(getProperty("httpd_port"));
-      webSitePort = foo.intValue();
+      if (args != null && args.getPort() != 0) {
+        webSitePort = args.getPort();
+      } else {
+        webSitePort = Integer.parseInt(getProperty("httpd_port"));
+      }
       System.out.println(webSitePort+"<br><br>");
 
       System.out.print("EJB Server            : ");
@@ -195,7 +210,11 @@ public class RUBiSProperties
       initdbsqlDbConnection = getProperty("initdbsql_db_connection");
       System.out.println("Initialization DB String     : ");
       System.out.println(initdbsqlDbConnection+"<br>");
-      
+
+      usersFile = getProperty("users_file");
+      System.out.println("Users file     : ");
+      System.out.println(initdbsqlDbConnection+"<br>");
+
       // # Workload
       System.out.println("\n<h3><br>### Workload ###</h3>");
       System.out.print("Remote client nodes            : ");
@@ -209,28 +228,23 @@ public class RUBiSProperties
       remoteCommand  = getProperty("workload_remote_client_command");
       System.out.println(remoteCommand+"<br>");
       System.out.print("Number of clients              : ");
-      foo = new Integer(getProperty("workload_number_of_clients_per_node"));
-      nbOfClients = foo.intValue();
+      nbOfClients = Integer.parseInt(getProperty("workload_number_of_clients_per_node"));
       System.out.println(nbOfClients+"<br>");
 
       System.out.print("Transition Table               : ");
       transitionTable = getProperty("workload_transition_table");
       System.out.println(transitionTable+"<br>");
       System.out.print("Number of columns              : ");
-      foo = new Integer(getProperty("workload_number_of_columns"));
-      nbOfColumns = foo.intValue();
+      nbOfColumns = Integer.parseInt(getProperty("workload_number_of_columns"));
       System.out.println(nbOfColumns+"<br>");
       System.out.print("Number of rows                 : ");
-      foo = new Integer(getProperty("workload_number_of_rows"));
-      nbOfRows = foo.intValue();
+      nbOfRows = Integer.parseInt(getProperty("workload_number_of_rows"));
       System.out.println(nbOfRows+"<br>");
       System.out.print("Maximum number of transitions  : ");
-      foo = new Integer(getProperty("workload_maximum_number_of_transitions"));
-      maxNbOfTransitions = foo.intValue();
+      maxNbOfTransitions = Integer.parseInt(getProperty("workload_maximum_number_of_transitions"));
       System.out.println(maxNbOfTransitions+"<br>");
       System.out.print("Number of items per page       : ");
-      foo = new Integer(getProperty("workload_number_of_items_per_page"));
-      nbOfItemsPerPage = foo.intValue();
+      nbOfItemsPerPage = Integer.parseInt(getProperty("workload_number_of_items_per_page"));
       System.out.println(nbOfItemsPerPage+"<br>");
       System.out.print("Think time                     : ");
       useTPCWThinkTime = getProperty("workload_use_tpcw_think_time").compareTo("yes") == 0;
@@ -239,20 +253,17 @@ public class RUBiSProperties
       else
         System.out.println("Using Transition Matrix think time information<br>");
       System.out.print("Up ramp time in ms             : ");
-      foo = new Integer(getProperty("workload_up_ramp_time_in_ms"));
-      upTime = foo.intValue();
+      upTime = Integer.parseInt(getProperty("workload_up_ramp_time_in_ms"));
       System.out.println(upTime+"<br>");
       System.out.print("Up ramp slowdown factor        : ");
       Float floo = new Float(getProperty("workload_up_ramp_slowdown_factor"));
       upSlowdown = floo.intValue();
       System.out.println(upSlowdown+"<br>");
       System.out.print("Session run time in ms         : ");
-      foo = new Integer(getProperty("workload_session_run_time_in_ms"));
-      sessionTime = foo.intValue();
+      sessionTime = Integer.parseInt(getProperty("workload_session_run_time_in_ms"));
       System.out.println(sessionTime+"<br>");
       System.out.print("Down ramp time in ms           : ");
-      foo = new Integer(getProperty("workload_down_ramp_time_in_ms"));
-      downTime = foo.intValue();
+      downTime = Integer.parseInt(getProperty("workload_down_ramp_time_in_ms"));
       System.out.println(downTime+"<br>");
       System.out.print("Down ramp slowdown factor      : ");
       floo = new Float(getProperty("workload_down_ramp_slowdown_factor"));
@@ -393,7 +404,8 @@ public class RUBiSProperties
     }
     catch (Exception e)
     {
-      System.err.println("Error while checking database.properties: "+e.getMessage());
+      System.err.println("Error while checking properties!");
+      e.printStackTrace();
       return null;
     }
     return urlGen;
@@ -846,5 +858,9 @@ public class RUBiSProperties
 
   public String getInitdbsqlDbConnection() {
     return initdbsqlDbConnection;
+  }
+
+  public String getUsersFile() {
+    return usersFile;
   }
 }

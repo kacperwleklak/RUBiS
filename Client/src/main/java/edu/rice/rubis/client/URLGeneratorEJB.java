@@ -232,4 +232,8 @@ public class URLGeneratorEJB extends URLGenerator
   {
     return "edu.rice.rubis.beans.servlets.ViewUserInfo";
   }
+
+  public String Users() {
+    throw new UnsupportedOperationException();
+  }
 }

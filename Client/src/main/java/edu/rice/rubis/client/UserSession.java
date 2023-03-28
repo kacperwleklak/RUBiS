@@ -15,19 +15,20 @@ import java.util.Vector;
  */
 public class UserSession extends Thread
 {
+  private UserGenerator   userGenerator = null;
   private RUBiSProperties rubis = null;         // access to rubis.properties file
   private URLGenerator    urlGen = null;        // URL generator corresponding to the version to be used (PHP, EJB or Servlets)
   private TransitionTable transition = null;    // transition table user for this session
   private String          lastHTMLReply = null; // last HTML reply received from 
   private Random          rand = new Random();  // random number generator
-  private int             userId;               // User id for the current session
+  private String          userId;               // User id for the current session
   private String          username = null;      // User name for the current session
   private String          password = null;      // User password for the current session
   private URL             lastURL = null;       // Last accessed URL
-  private int             lastItemId = -1;      // This is to deal with back because the itemId cannot be retrieved from the current page
-  private int             lastUserId = -1;      // This is to deal with back because the itemId cannot be retrieved from the current page
+  private String          lastItemId = "";      // This is to deal with back because the itemId cannot be retrieved from the current page
+  private String          lastUserId = "";      // This is to deal with back because the itemId cannot be retrieved from the current page
   private Stats           stats;                // Statistics to collect errors, time, ...
-  private int             debugLevel = 0;       // 0 = no debug message, 1 = just error messages, 2 = error messages+HTML pages, 3 = everything!
+  private int             debugLevel = 3;       // 0 = no debug message, 1 = just error messages, 2 = error messages+HTML pages, 3 = everything!
  
   /**
    * Creates a new <code>UserSession</code> instance.
@@ -36,13 +37,14 @@ public class UserSession extends Thread
    * @param RUBiS rubis.properties
    * @param statistics where to collect statistics
    */
-  public UserSession(String threadId, URLGenerator URLGen, RUBiSProperties RUBiS, Stats statistics)
+  public UserSession(String threadId, URLGenerator URLGen, RUBiSProperties RUBiS, Stats statistics, UserGenerator generator)
   {
     super(threadId);
+    userGenerator = generator;
     urlGen = URLGen;
     rubis  = RUBiS;
     stats  = statistics;
-    debugLevel = rubis.getMonitoringDebug(); // debugging level: 0 = no debug message, 1 = just error messages, 2 = error messages+HTML pages, 3 = everything!
+    //debugLevel = rubis.getMonitoringDebug(); // debugging level: 0 = no debug message, 1 = just error messages, 2 = error messages+HTML pages, 3 = everything!
 
     transition = new TransitionTable(rubis.getNbOfColumns(), rubis.getNbOfRows(), statistics, rubis.useTPCWThinkTime());
     if (!transition.ReadExcelTextFile(rubis.getTransitionTable()))
@@ -61,6 +63,10 @@ public class UserSession extends Thread
     String              HTMLReply = "";
     BufferedInputStream in = null;
     int                 retry = 0;
+
+    if (debugLevel>2) {
+      System.out.println("Calling " + url.toString());
+    }
         
     while (retry < 5)
     {
@@ -181,13 +187,13 @@ public class UserSession extends Thread
    *
    * @return an item identifier or -1 on error
    */
-  private int extractItemIdFromHTML()
+  private String extractItemIdFromHTML()
   {
     if (lastHTMLReply == null)
     {
       if (debugLevel>0)
         System.err.println("Thread "+this.getName()+": There is no previous HTML reply<br>");
-      return -1;
+      return "";
     }
 
     // Count number of itemId
@@ -200,13 +206,13 @@ public class UserSession extends Thread
     }
     if (count == 0)
     {
-      if (lastItemId >= 0)
+      if (!lastItemId.equals(""))
         return lastItemId;
       if (debugLevel>0)
         System.err.println("Thread "+this.getName()+": Cannot found item id in last HTML reply<br>");
       if (debugLevel>1)
         System.err.println("Thread "+this.getName()+": Last HTML reply is: "+lastHTMLReply+"<br>");
-      return -1;
+      return "";
     }
 
     // Choose randomly an item
@@ -221,9 +227,7 @@ public class UserSession extends Thread
     lastIndex = isMin(lastIndex, lastHTMLReply.indexOf('?', keyIndex+7));
     lastIndex = isMin(lastIndex, lastHTMLReply.indexOf('&', keyIndex+7));
     lastIndex = isMin(lastIndex, lastHTMLReply.indexOf('>', keyIndex+7));
-    Integer foo = new Integer(lastHTMLReply.substring(keyIndex+7, lastIndex));
-    lastItemId = foo.intValue();
-    return lastItemId;
+    return lastHTMLReply.substring(keyIndex+7, lastIndex);
   }
 
 
@@ -281,9 +285,6 @@ public class UserSession extends Thread
     int keyIndex = lastHTMLReply.indexOf(key);
     if (keyIndex == -1)
     {
-      // Dirty hack here, ugly but convenient
-      if ((key.compareTo("userId=") == 0) && (lastUserId >= 0))
-        return lastUserId;
       if (debugLevel > 0)
         System.err.println("Thread "+this.getName()+": Cannot found "+key+" in last HTML reply<br>");
       if (debugLevel > 1)
@@ -296,9 +297,36 @@ public class UserSession extends Thread
     lastIndex = isMin(lastIndex, lastHTMLReply.indexOf('>', keyIndex+key.length()));
     Integer foo = new Integer(lastHTMLReply.substring(keyIndex+key.length(), lastIndex));
     // Dirty hack again here, ugly but convenient
-    if (key.compareTo("userId=") == 0)
-      lastUserId = foo.intValue();
-    return foo.intValue();
+    return foo;
+  }
+
+  private String extractStrFromHTML(String key)
+  {
+    if (lastHTMLReply == null)
+    {
+      if (debugLevel>0)
+        System.err.println("Thread "+this.getName()+": There is no previous HTML reply");
+      return "";
+    }
+
+    // Look for the key
+    int keyIndex = lastHTMLReply.indexOf(key);
+    if (keyIndex == -1)
+    {
+      // Dirty hack here, ugly but convenient
+      if ((key.compareTo("userId=") == 0) && (!lastUserId.equals("")))
+        return lastUserId;
+      if (debugLevel > 0)
+        System.err.println("Thread "+this.getName()+": Cannot found "+key+" in last HTML reply<br>");
+      if (debugLevel > 1)
+        System.err.println("Thread "+this.getName()+": Last HTML reply is: "+lastHTMLReply+"<br>");
+      return "";
+    }
+    int lastIndex = isMin(Integer.MAX_VALUE, lastHTMLReply.indexOf('\"', keyIndex+key.length()));
+    lastIndex = isMin(lastIndex, lastHTMLReply.indexOf('?', keyIndex+key.length()));
+    lastIndex = isMin(lastIndex, lastHTMLReply.indexOf('&', keyIndex+key.length()));
+    lastIndex = isMin(lastIndex, lastHTMLReply.indexOf('>', keyIndex+key.length()));
+    return lastHTMLReply.substring(keyIndex+key.length(), lastIndex);
   }
 
 
@@ -396,16 +424,16 @@ public class UserSession extends Thread
       }
     case 9: // View an item
       {
-        int itemId = extractItemIdFromHTML();
-        if (itemId == -1)
+        String itemId = extractItemIdFromHTML();
+        if (!itemId.equals(""))
           computeURLFromState(transition.backToPreviousState()); // Nothing then go back
         else
           return urlGen.viewItem(itemId);
       }
     case 10: // View user information
       {
-        int userId = extractIntFromHTML("userId=");
-        if (userId == -1)
+        String userId = extractStrFromHTML("userId=");
+        if (userId.equals(""))
           computeURLFromState(transition.backToPreviousState()); // Nothing then go back
         else
           return urlGen.viewUserInformation(userId);
@@ -428,8 +456,8 @@ public class UserSession extends Thread
       return urlGen.putBidAuth(extractItemIdFromHTML());
     case 16: // Bid confirmation page
       {
-        int itemId = extractItemIdFromHTML();
-        if (itemId == -1)
+        String itemId = extractItemIdFromHTML();
+        if (!itemId.equals(""))
           computeURLFromState(transition.backToPreviousState()); // Nothing then go back
         else
           return urlGen.putBid(itemId, username, password);
@@ -448,9 +476,9 @@ public class UserSession extends Thread
         return urlGen.storeBid(extractItemIdFromHTML(), userId, minBid, bid, maxBid, qty, maxQty);
       }
     case 18: // Comment Authentication page
-      return urlGen.putCommentAuth(extractItemIdFromHTML(), extractIntFromHTML("to="));
+      return urlGen.putCommentAuth(extractItemIdFromHTML(), extractStrFromHTML("to="));
     case 19: // Comment confirmation page
-      return urlGen.putComment(extractItemIdFromHTML(), extractIntFromHTML("to="), username, password);
+      return urlGen.putComment(extractItemIdFromHTML(), extractStrFromHTML("to="), username, password);
     case 20: // Store Comment in the database
       { // Generate a random comment and rating
         String[] staticComment = { "This is a very bad comment. Stay away from this seller !!<br>",
@@ -474,7 +502,7 @@ public class UserSession extends Thread
         }
         comment = staticComment[rating].substring(0, commentLength);
 
-        return urlGen.storeComment(extractItemIdFromHTML(), extractIntFromHTML("name=to value="), userId, ratingValue[rating], comment);
+        return urlGen.storeComment(extractItemIdFromHTML(), extractStrFromHTML("name=to value="), userId, ratingValue[rating], comment);
       }
     case 21: // Sell page
       return urlGen.sell();
@@ -563,7 +591,7 @@ public class UserSession extends Thread
     while (!ClientEmulator.isEndOfSimulation())
     {
       // Select a random user for this session
-      userId = rand.nextInt(rubis.getNbOfUsers());
+      userId = userGenerator.getRandomUser();
       username = "user"+(userId+1);
       password = "password"+(userId+1);
       nbOfTransitions = rubis.getMaxNbOfTransitions();

@@ -232,4 +232,8 @@ public class URLGeneratorPHP extends URLGenerator
   {
     return "ViewUserInfo.php";
   }
+
+  public String Users() {
+    return "Users.php";
+  }
 }

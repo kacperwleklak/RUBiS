@@ -16,15 +16,19 @@ RUN apt-get -y install sysstat
 
 # SSH
 RUN apt install openssh-server sudo -y
-RUN useradd -rm -d /home/ubuntu -s /bin/bash -g root -G sudo -u 1000 test
-RUN  echo 'test:test' | chpasswd
-RUN service ssh start
-RUN ssh-keygen -t rsa -q -f "/root/.ssh/id_rsa" -N ""
+RUN mkdir /var/run/sshd
+RUN echo 'root:root' | chpasswd
+RUN useradd -m test
+RUN passwd -d test
+RUN sed -i'' -e's/^#PermitRootLogin prohibit-password$/PermitRootLogin yes/' /etc/ssh/sshd_config \
+        && sed -i'' -e's/^#PasswordAuthentication yes$/PasswordAuthentication yes/' /etc/ssh/sshd_config \
+        && sed -i'' -e's/^#PermitEmptyPasswords no$/PermitEmptyPasswords yes/' /etc/ssh/sshd_config \
+        && sed -i'' -e's/^UsePAM yes/UsePAM no/' /etc/ssh/sshd_config
 
 # Copy files
 RUN mkdir ./Client
 ADD ./Client/bench/** ./Client/bench/
-COPY --from=build /usr/src/app/target/RUBIS-Client-*.jar ./Client/RUBiS-client-emulator.jar
+COPY --from=build /usr/src/app/target/RUBIS-Client-1.0-SNAPSHOT-jar-with-dependencies.jar ./Client/RUBiS-client-emulator.jar
 ADD ./database ./database
 ADD ./workload ./workload
 

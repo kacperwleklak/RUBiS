@@ -54,7 +54,7 @@ public class TimeManagement extends GregorianCalendar
     hour   = d.get(d.HOUR_OF_DAY);
     minute = d.get(d.MINUTE);
     second = d.get(d.SECOND);
-    result = year+"-"+month+"-"+day+" "+hour+":"+minute+":"+second;
+    result = year+"-"+month+"-"+day+"_"+hour+"-"+minute+"-"+second;
     return result;
   }
 

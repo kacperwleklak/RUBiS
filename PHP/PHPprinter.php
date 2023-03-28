@@ -1,10 +1,5 @@
 <?php
 
-function getDatabaseLink(&$link) {
-    $link = mysqli_pconnect("localhost", "root", "batata83") or die("ERROR: Could not connect to database");
-    mysql_select_db("rubis", $link) or die("ERROR: Couldn't select RUBiS database");
-}
-
 function getMicroTime() {
     list($usec, $sec) = explode(" ", microtime());
     return ((float) $usec + (float) $sec);

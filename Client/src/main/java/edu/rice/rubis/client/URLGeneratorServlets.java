@@ -232,4 +232,8 @@ public class URLGeneratorServlets extends URLGenerator
   {
     return "edu.rice.rubis.servlets.ViewUserInfo";
   }
+
+  public String Users() {
+    throw new UnsupportedOperationException();
+  }
 }

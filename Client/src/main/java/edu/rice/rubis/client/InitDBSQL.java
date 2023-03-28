@@ -1,6 +1,8 @@
 package edu.rice.rubis.client;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.net.URL;
@@ -52,7 +54,6 @@ public class InitDBSQL {
 
     private List<String> usersIds;
 
-
     /**
      * Creates a new <code>InitDB</code> instance.
      */
@@ -62,6 +63,21 @@ public class InitDBSQL {
         if (urlGen == null)
             Runtime.getRuntime().exit(1);
         itemsPerCategory = rubis.getItemsPerCategory();
+//        usersIds = new ArrayList<>();
+//        BufferedReader reader;
+//        try {
+//            reader = new BufferedReader(new FileReader(
+//                    "C:\\Users\\kapik\\Documents\\studia\\magisterka\\RUBiS\\database\\users"));
+//            String line = reader.readLine();
+//            while (line != null) {
+//                System.out.println("Reading user " + line);
+//                usersIds.add(line);
+//                line = reader.readLine();
+//            }
+//            reader.close();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
 
     /**
@@ -115,6 +131,7 @@ public class InitDBSQL {
         if (generateItems || generateBids || generateComments || generateAll) {
             initDB.generateItems(generateBids || generateAll, generateComments || generateAll);
         }
+
     }
 
 
@@ -142,10 +159,10 @@ public class InitDBSQL {
         Connection c;
         try {
             c = getConnection();
-            PreparedStatement ps = c.prepareStatement("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, 0, 0, NOW(), ?)");
+            //PreparedStatement ps = c.prepareStatement("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, 0, 0, NOW(), ?)");
             System.out.print("Generating " + getNbOfUsers + " users ");
             for (i = 0; i < getNbOfUsers; i++) {
-
+                PreparedStatement ps = c.prepareStatement("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, 0, 0, NOW(), ?)");
                 userId = UUID.randomUUID().toString();
                 firstname = "Great" + (i + 1);
                 lastname = "User" + (i + 1);
@@ -162,10 +179,11 @@ public class InitDBSQL {
                 ps.setString(5, password);
                 ps.setString(6, email);
                 ps.setInt(7, regionNameId);
-                ps.addBatch();
+                int updatedCount = ps.executeUpdate();
+                System.out.println("User = " + userId + ", updated = " + updatedCount);
                 usersIds.add(userId);
             }
-            ps.executeBatch();
+            //ps.executeBatch();
         } catch (Exception e) {
             System.err.println("Error while generating users: " + e.getMessage());
             e.printStackTrace();
@@ -255,7 +273,7 @@ public class InitDBSQL {
             PreparedStatement ps_comments = c.prepareStatement("INSERT INTO comments VALUES (DEFAULT, ?,?,?,?,NOW(), ?)");
             PreparedStatement ps_user_update = c.prepareStatement("UPDATE users SET rating=rating+? WHERE id=?");
 
-            for (i = 0; i < totalItems; i++) {
+            for (i = 15800; i < totalItems; i++) {
                 if (i % 10 == 0) {
                     System.out.println("Generating " + i + " / " + totalItems + " items");
                 }
@@ -461,5 +479,4 @@ public class InitDBSQL {
     private String getRandomUserId() {
         return usersIds.get(rand.nextInt(usersIds.size()));
     }
-
 }

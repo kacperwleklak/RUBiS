@@ -1,59 +1,66 @@
 version: '3.8'
 networks:
-  "rubis-cluster":
-    external: true
+  my-network:
+    driver: bridge
+
+# command
+#  /opt/java/openjdk/bin/java -cp /Client/RUBiS-client-emulator.jar edu.rice.rubis.client.ClientEmulator rubis-docker
 
 services:
-  client-main:
-    hostname: rubis-c-main
-    container_name: rubis-cluster-c-main
+  client-1:
+    hostname: rubis-c-1
+    container_name: rubis-c-1
     image: rubis/client
     networks:
-      - rubis-cluster
+      - my-network
+    ports:
+      - "2221:22"
     environment:
-      - RUBIS_workload_remote_client_nodes=test@rubis-c1,test@rubis-c2,test@rubis-c3
-      - RUBIS_database_server=creek1
-      - RUBIS_httpd_hostname=rubis-backend
+      - RUBIS_httpd_hostname=127.0.1.1
+      - RUBIS_httpd_port=81
 
-  client1:
-    hostname: rubis-c1
-    container_name: rubis-cluster-c1
+  client-2:
+    hostname: rubis-c-2
+    container_name: rubis-c-2
     image: rubis/client
     networks:
-      - rubis-cluster
+      - my-network
+    ports:
+      - "2222:22"
     environment:
-      - RUBIS_httpd_hostname=rubis-backend
+      - RUBIS_httpd_hostname=192.168.18.114
+      - RUBIS_httpd_port=82
 
-  client2:
-    hostname: rubis-c2
-    container_name: rubis-cluster-c2
-    image: rubis/client
-    networks:
-      - rubis-cluster
-    environment:
-      - RUBIS_httpd_hostname=rubis-backend
-
-  client3:
-    hostname: rubis-c3
-    container_name: rubis-cluster-c3
-    image: rubis/client
-    networks:
-      - rubis-cluster
-    environment:
-      - RUBIS_httpd_hostname=rubis-backend
-
-  php-apache-environment:
-    hostname: rubis-backend
-    container_name: rubis-cluster-backend
+  php-apache-environment-1:
+    container_name: rubis-cluster-backend-1
+    hostname: rubis-1
     image: rubis/backend
     networks:
-      - rubis-cluster
+      - my-network
     volumes:
       - ./PHP/:/var/www/html/PHP/
     ports:
-      - "80:80"
+      - "81:80"
     environment:
       - RUBIS_DB_HOST=creek1
+      - RUBIS_DB_PORT=5432
+      - RUBIS_DB_HOST_TYPE=pgsql
+      - RUBIS_DB_USERNAME=user
+      - RUBIS_DB_PASSWORD=pass
+      - RUBIS_DB_DATABASE=db
+
+  php-apache-environment-2:
+    container_name: rubis-cluster-backend-2
+    hostname: rubis-2
+    image: rubis/backend
+    networks:
+      - my-network
+    volumes:
+      - ./PHP/:/var/www/html/PHP/
+    ports:
+      - "82:80"
+    environment:
+      - RUBIS_DB_HOST=creek2
       - RUBIS_DB_PORT=5432
       - RUBIS_DB_HOST_TYPE=pgsql
       - RUBIS_DB_USERNAME=user
@@ -64,9 +71,10 @@ services:
     image: kacperwleklak/creek
     hostname: creek1
     networks:
-      - rubis-cluster
+      - my-network
     ports:
-      - "8080:8080"
+      - "10001:10001"
+      - "8081:8080"
       - "5433:5432"
     environment:
       - PG_PORT=5432
@@ -74,4 +82,22 @@ services:
       - COMMUNICATION_REPLICAS_PORT=10001
       - COMMUNICATION_REPLICAS_HOST=creek1
       - SERVER_PORT=8080
-      - COMMUNICATION_REPLICAS_NODES=creek1:10001
+      - COMMUNICATION_REPLICAS_NODES=creek1:10001,creek2:10001
+      - COMMUNICATION_REPLICAS_ID=1
+  creek2:
+    image: kacperwleklak/creek
+    hostname: creek2
+    networks:
+      - my-network
+    ports:
+      - "10002:10002"
+      - "8082:8080"
+      - "5434:5432"
+    environment:
+      - PG_PORT=5432
+      - DBNAME=creek
+      - COMMUNICATION_REPLICAS_PORT=10001
+      - COMMUNICATION_REPLICAS_HOST=creek2
+      - SERVER_PORT=8080
+      - COMMUNICATION_REPLICAS_NODES=creek1:10001,creek2:10001
+      - COMMUNICATION_REPLICAS_ID=2
