@@ -18,6 +18,7 @@ RUN echo 'error_reporting=E_ALL' >> /usr/local/etc/php/conf.d/error_reporting.in
 
 # Postgres driver
 RUN apt-get update && apt-get install -y libpq-dev && docker-php-ext-install pdo pdo_pgsql
+RUN docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql && docker-php-ext-install pdo_pgsql pgsql
 
 # SSH for monitoring
 RUN apt install openssh-server sudo -y

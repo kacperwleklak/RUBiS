@@ -114,7 +114,7 @@ public class ClientEmulator
       cmd[2] = rubis.getMonitoringProgram()+" "+rubis.getMonitoringOptions()+" "+
         rubis.getMonitoringSampling()+" "+fullTimeInSec+" > "+outputFileName;
 
-      String command = "sh " + "Client/bench/monitor.sh " + cmd[1] + " " + rubis.getMonitoringSampling() + " " +fullTimeInSec + " " + outputFileName;
+      String command = "sh " + "/Client/bench/monitor.sh " + cmd[1] + " " + rubis.getMonitoringSampling() + " " +fullTimeInSec + " " + outputFileName;
       System.out.println("&nbsp &nbsp Command is: "+command+"<br>\n");
 
       return Runtime.getRuntime().exec(command);
@@ -276,13 +276,13 @@ public class ClientEmulator
 //      System.out.println("ClientEmulator: Starting monitoring program locally on client<br>\n");
 //      clientMonitor = client.startMonitoringProgram("localhost", reportDir+"client0");
 
-//      remoteClientMonitor = new Process[client.rubis.getRemoteClients().size()];
-//      // Monitor remote clients
-//      for (int i = 0 ; i < client.rubis.getRemoteClients().size() ; i++)
-//      {
-//        System.out.println("ClientEmulator: Starting monitoring program locally on client<br>\n");
-//        remoteClientMonitor[i] = client.startMonitoringProgram((String)client.rubis.getRemoteClients().get(i), reportDir+"client"+(i+1));
-//      }
+      remoteClientMonitor = new Process[client.rubis.getRemoteClients().size()];
+      // Monitor remote clients
+      for (int i = 0 ; i < client.rubis.getRemoteClients().size() ; i++)
+      {
+        System.out.println("ClientEmulator: Starting monitoring program locally on client<br>\n");
+        remoteClientMonitor[i] = client.startMonitoringProgram((String)client.rubis.getRemoteClients().get(i), reportDir+"client"+(i+1));
+      }
 
       // Redirect output for traces
       try
@@ -299,6 +299,8 @@ public class ClientEmulator
     else
     { // Redirect output of remote clients
       System.out.println("Redirecting output to '"+arguments.getReportDir()+"'");
+      File dir = new File(arguments.getReportDir());
+      dir.mkdirs();
       try
       {
         PrintStream outputStream = new PrintStream(new FileOutputStream(arguments.getReportDir()));
@@ -330,16 +332,7 @@ public class ClientEmulator
     // Run user sessions
     System.out.println("ClientEmulator: Starting "+client.rubis.getNbOfClients()+" session threads<br>");
     UserGenerator userGenerator;
-    try {
-      List<String> usersIds = client.fetchUsersIds();
-      if (usersIds.isEmpty()) {
-        userGenerator = new UserGenerator(client.rubis);
-      } else {
-        userGenerator = new UserGenerator(usersIds);
-      }
-    } catch (IOException e) {
-      userGenerator = new UserGenerator(client.rubis);
-    }
+    userGenerator = new UserGenerator(client.rubis);
 
     for (int i = 0 ; i < client.rubis.getNbOfClients() ; i++)
     {
@@ -461,17 +454,17 @@ public class ClientEmulator
       // Get information about each node
       System.out.println("<br><A NAME=\"node\"></A><h3>Node Information</h3><br>");
 
-      // Web server
-      System.out.println("<B>Web server</B><br>");
-      client.printNodeInformation(client.rubis.getWebServerName());
-
-      // Database server
-      System.out.println("<br><B>Database server</B><br>");
-      client.printNodeInformation(client.rubis.getDBServerName());
+//      // Web server
+//      System.out.println("<B>Web server</B><br>");
+//      client.printNodeInformation(client.rubis.getWebServerName());
+//
+//      // Database server
+//      System.out.println("<br><B>Database server</B><br>");
+//      client.printNodeInformation(client.rubis.getDBServerName());
 
       // Client
-//      System.out.println("<br><B>Local client</B><br>");
-//      client.printNodeInformation("localhost");
+      System.out.println("<br><B>Local client</B><br>");
+      client.printNodeInformation("localhost");
 
       // Remote Clients
       for (int i = 0 ; i < client.rubis.getRemoteClients().size() ; i++)
@@ -546,8 +539,8 @@ public class ClientEmulator
           remoteClientMonitor[i].waitFor();
           remoteClient[i].waitFor();
         }
-        webServerMonitor.waitFor();
-        dbServerMonitor.waitFor();
+//        webServerMonitor.waitFor();
+//        dbServerMonitor.waitFor();
       }
 
       catch (Exception e)
@@ -559,7 +552,7 @@ public class ClientEmulator
       try
       {
         String[] cmd = new String[4];
-        cmd[0] = "Client/bench/generate_graphs.sh";
+        cmd[0] = "/Client/bench/generate_graphs.sh";
         cmd[1] = reportDir;
         cmd[2] = client.rubis.getGnuPlotTerminal();
         cmd[3] = Integer.toString(client.rubis.getRemoteClients().size()+1);
@@ -616,7 +609,7 @@ public class ClientEmulator
       try
       {
         String[] cmd = new String[6];
-        cmd[0] = "Client/bench/compute_global_stats.awk";
+        cmd[0] = "/Client/bench/compute_global_stats.awk";
         cmd[1] = "-v";
         cmd[2] = "path="+reportDir;
         cmd[3] = "-v";
@@ -633,22 +626,6 @@ public class ClientEmulator
 
     Runtime.getRuntime().exit(0);
   }
-
-  public List<String> fetchUsersIds() throws IOException {
-    OkHttpClient client = new OkHttpClient();
-    Request request = new Request.Builder()
-            .url(urlGen.getUsers())
-            .build();
-
-    Call call = client.newCall(request);
-    ResponseBody body = call.execute().body();
-    if (body != null) {
-      ObjectMapper objectMapper = new ObjectMapper();
-      return Arrays.asList(objectMapper.readValue(body.string(), String[].class));
-    }
-    return Collections.emptyList();
-  }
-
   private static String generateRunRemoteClientCommand(String remoteCommand, int clientID, String baseDirPath,
                                                 List<Arguments.Backend> backends, String propertiesFile) {
     Arguments.Backend backend = backends.get((clientID) % backends.size());

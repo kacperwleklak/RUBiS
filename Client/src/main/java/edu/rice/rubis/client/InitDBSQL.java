@@ -1,8 +1,6 @@
 package edu.rice.rubis.client;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.net.URL;
@@ -67,7 +65,7 @@ public class InitDBSQL {
 //        BufferedReader reader;
 //        try {
 //            reader = new BufferedReader(new FileReader(
-//                    "C:\\Users\\kapik\\Documents\\studia\\magisterka\\RUBiS\\database\\users"));
+//                    "C:\\Users\\kapik\\Documents\\studia\\magisterka\\RUBiS\\database\\users.json"));
 //            String line = reader.readLine();
 //            while (line != null) {
 //                System.out.println("Reading user " + line);
@@ -83,12 +81,12 @@ public class InitDBSQL {
     /**
      * Main program accepts any combination of the following arguments: <pre>
      * all: generate the complete database
-     * users: generate only users
+     * users.json: generate only users.json
      * items: generate only items
      * bids: generate bids and items (it is not possible to create bids without creating the related items)
      * comments: generate comments and items (it is not possible to create comments without creating the related items)
      * <p>
-     * @param args all|users|items|bids|comments
+     * @param args all|users.json|items|bids|comments
      */
     public static void main(String[] args) {
         System.out.println("RUBiS database initialization - (C) Rice University/INRIA 2001\n");
@@ -101,7 +99,7 @@ public class InitDBSQL {
             System.out.println("Using Makefile: make initDB PARAM=\"parameters\"");
             System.out.println("where parameter is one or any combination of the following arguments:");
             System.out.println(" all: generate the complete database");
-            System.out.println(" users: generate only users");
+            System.out.println(" users.json: generate only users.json");
             System.out.println(" items: generate only items");
             System.out.println(" bids: generate bids and items (it is not possible to create bids without creating the related items)");
             System.out.println(" comments: generate comments and items (it is not possible to create comments without creating the related items)");
@@ -120,7 +118,7 @@ public class InitDBSQL {
         InitDBSQL initDB = new InitDBSQL(configFile);
 
         boolean generateAll = params.contains("all");
-        boolean generateUsers = params.contains("users");
+        boolean generateUsers = params.contains("users.json");
         boolean generateItems = params.contains("items");
         boolean generateBids = params.contains("bids");
         boolean generateComments = params.contains("comments");
@@ -136,7 +134,7 @@ public class InitDBSQL {
 
 
     /**
-     * This method add users to the database according to the parameters
+     * This method add users.json to the database according to the parameters
      * given in the database.properties file.
      */
     public void generateUsers() {
@@ -159,10 +157,10 @@ public class InitDBSQL {
         Connection c;
         try {
             c = getConnection();
-            //PreparedStatement ps = c.prepareStatement("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, 0, 0, NOW(), ?)");
-            System.out.print("Generating " + getNbOfUsers + " users ");
+            //PreparedStatement ps = c.prepareStatement("INSERT INTO users.json VALUES (?, ?, ?, ?, ?, ?, 0, 0, NOW(), ?)");
+            System.out.print("Generating " + getNbOfUsers + "users.json ");
             for (i = 0; i < getNbOfUsers; i++) {
-                PreparedStatement ps = c.prepareStatement("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, 0, 0, NOW(), ?)");
+                PreparedStatement ps = c.prepareStatement("INSERT INTO users.json VALUES (?, ?, ?, ?, ?, ?, 0, 0, NOW(), ?)");
                 userId = UUID.randomUUID().toString();
                 firstname = "Great" + (i + 1);
                 lastname = "User" + (i + 1);
@@ -185,7 +183,7 @@ public class InitDBSQL {
             }
             //ps.executeBatch();
         } catch (Exception e) {
-            System.err.println("Error while generating users: " + e.getMessage());
+            System.err.println("Error while generating users.json: " + e.getMessage());
             e.printStackTrace();
         }
         System.out.println("Done!");
@@ -271,7 +269,7 @@ public class InitDBSQL {
             PreparedStatement ps = null;
             PreparedStatement ps_bids = c.prepareStatement("INSERT INTO bids VALUES (DEFAULT, ?,?,?,?,?, NOW())");
             PreparedStatement ps_comments = c.prepareStatement("INSERT INTO comments VALUES (DEFAULT, ?,?,?,?,NOW(), ?)");
-            PreparedStatement ps_user_update = c.prepareStatement("UPDATE users SET rating=rating+? WHERE id=?");
+            PreparedStatement ps_user_update = c.prepareStatement("UPDATE users.json SET rating=rating+? WHERE id=?");
 
             for (i = 15800; i < totalItems; i++) {
                 if (i % 10 == 0) {

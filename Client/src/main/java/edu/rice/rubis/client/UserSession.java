@@ -21,7 +21,7 @@ public class UserSession extends Thread
   private TransitionTable transition = null;    // transition table user for this session
   private String          lastHTMLReply = null; // last HTML reply received from 
   private Random          rand = new Random();  // random number generator
-  private String          userId;               // User id for the current session
+  private String          userId;               // User for the current session
   private String          username = null;      // User name for the current session
   private String          password = null;      // User password for the current session
   private URL             lastURL = null;       // Last accessed URL
@@ -390,15 +390,15 @@ public class UserSession extends Thread
       return urlGen.register();
     case 2: // Register the user in the database
       { // Choose a random nb over already known attributed ids
-        int i = rubis.getNbOfUsers()+rand.nextInt(1000000)+1; 
-        String firstname = "Great"+i;
-        String lastname = "User"+i;
-        String nickname = "user"+i;
-        String email = firstname+"."+lastname+"@rubis.com";
-        String password = "password"+i;
-        String regionName = (String)rubis.getRegions().elementAt(i % rubis.getNbOfRegions());
-        
-        return urlGen.registerUser(firstname, lastname, nickname, email, password, regionName);
+//        int i = rubis.getNbOfUsers()+rand.nextInt(1000000)+1;
+//        String firstname = "Great"+i;
+//        String lastname = "User"+i;
+//        String nickname = "user"+i;
+//        String email = firstname+"."+lastname+"@rubis.com";
+//        String password = "password"+i;
+//        String regionName = (String)rubis.getRegions().elementAt(i % rubis.getNbOfRegions());
+//
+//        return urlGen.registerUser(firstname, lastname, nickname, email, password, regionName);
       }
     case 3: // Browse Page
       return urlGen.browse();
@@ -591,9 +591,10 @@ public class UserSession extends Thread
     while (!ClientEmulator.isEndOfSimulation())
     {
       // Select a random user for this session
-      userId = userGenerator.getRandomUser();
-      username = "user"+(userId+1);
-      password = "password"+(userId+1);
+      User user = userGenerator.getRandomUser();
+      userId = user.getId();
+      username = user.getUsername();
+      password = user.getPassword();
       nbOfTransitions = rubis.getMaxNbOfTransitions();
       if (debugLevel > 2)
         System.out.println("Thread "+this.getName()+": Starting a new user session for "+username+" ...<br>");

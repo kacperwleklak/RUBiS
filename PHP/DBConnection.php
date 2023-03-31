@@ -25,7 +25,8 @@ class DBConnection
     function connect()
     {
         try {
-            $this->connection = new PDO("$this->host_type:host=$this->host;port=$this->port;dbname=$this->database", $this->username, $this->password);
+            $this->connection = pg_pconnect("host=".$this->host." port="."$this->port"." dbname="."$this->database"." password="."$this->password"." user="."$this->username");
+            //$this->connection = new PDO("$this->host_type:host=$this->host;port=$this->port;dbname=$this->database", $this->username, $this->password);
             $this->status = TRUE;
         } catch (PDOException $e) {
             echo $e->getMessage();
@@ -42,7 +43,8 @@ class DBConnection
 
     function get_connection()
     {
-        return $this->connection;
+        //return $this->connection;
+        return $this;
     }
 
     function get_status()
@@ -53,6 +55,11 @@ class DBConnection
     function get_host_type()
     {
         return $this->host_type;
+    }
+
+    function pg_query($query)
+    {
+        return pg_query($query);
     }
 
 }
