@@ -40,7 +40,7 @@
 
         $row = $result[0];
         $maxBidResult = $DBQueries->selectMaxItemBid($row["id"]);
-        $maxBidRow = $maxBidResult[0];
+        $maxBidRow = $maxBidResult == null ? 0 : $maxBidResult[0];
         $maxBid = $maxBidRow;
         if ($maxBid == 0) {
             $maxBid = $row["initial_price"];
@@ -61,8 +61,7 @@
             }
             $firstBid = $maxBid;
             $nbOfBidsResult = $DBQueries->selectNumBidsByItem($row["id"]);
-            $nbOfBidsRow = $nbOfBidsResult[0];
-            $nbOfBids = $nbOfBidsRow["bid"];
+            $nbOfBids = $nbOfBidsResult[0];
         }
 
         printHTMLheader("RUBiS: Bidding");
@@ -94,7 +93,7 @@
         print("</TABLE>\n");
 
         // Can the user by this item now ?
-        if ($buyNow > 0)
+        if (isset($buyNow) && $buyNow > 0)
             print("<p><a href=\"/PHP/BuyNowAuth.php?itemId=" . $row["id"] . "\">" .
                     "<IMG SRC=\"/PHP/buy_it_now.jpg\" height=22 width=150></a>" .
                     "  <BIG><b>You can buy this item right now for only \$$buyNow</b></BIG><br><p>\n");

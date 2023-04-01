@@ -228,7 +228,11 @@ public class RUBiSProperties
       remoteCommand  = getProperty("workload_remote_client_command");
       System.out.println(remoteCommand+"<br>");
       System.out.print("Number of clients              : ");
-      nbOfClients = Integer.parseInt(getProperty("workload_number_of_clients_per_node"));
+      if (args != null && args.getClientsPerNode() != 0) {
+        nbOfClients = args.getClientsPerNode();
+      } else {
+        nbOfClients = Integer.parseInt(getProperty("workload_number_of_clients_per_node"));
+      }
       System.out.println(nbOfClients+"<br>");
 
       System.out.print("Transition Table               : ");

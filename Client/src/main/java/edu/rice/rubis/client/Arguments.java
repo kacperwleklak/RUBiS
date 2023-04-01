@@ -11,6 +11,7 @@ public class Arguments {
             "   -h <string> - host, optional, default in properties\n" +
             "   -p <number> - port, optional, default in properties\n" +
             "   -prop <string> - properties file name (without .properties extension), optional, default = rubis\n" +
+            "   -clientsPerNode, -cpn <number> - clients per node, default in properties\n" +
             "   -main <boolean> - is main client, optional, default = false\n" +
             "   -backends <string> - list of backend services, e.g. host1:80,host2:80, required for main\n" +
             "   -reportDir <string> - path to report file, required for not main" +
@@ -20,6 +21,7 @@ public class Arguments {
             "   backend host: %s\n" +
             "   backend port: %d\n" +
             "   properties file: %s\n" +
+            "   clients per node: %d\n" +
             "   main: %b\n" +
             "   backends: %s\n" +
             "   reportDir: %s\n" +
@@ -32,6 +34,7 @@ public class Arguments {
     private String reportDir;
     private String statsDir;
     private List<Backend> backends;
+    private int clientsPerNode;
 
     public Arguments(String[] args) throws IllegalArgumentException {
         for (int i = 0; i < args.length; i = i + 2) {
@@ -49,6 +52,10 @@ public class Arguments {
                         break;
                     case "-main":
                         main = Boolean.parseBoolean(args[i + 1].trim());
+                        break;
+                    case "-cpn":
+                    case "-clientsPerNode":
+                        clientsPerNode = Integer.parseInt(args[i + 1].trim());
                         break;
                     case "-backends":
                         String backendsStr = args[i + 1].trim();
@@ -91,7 +98,7 @@ public class Arguments {
         String backendsStr = backends != null
                 ? backends.stream().map(Objects::toString).collect(Collectors.joining(","))
                 : null;
-        System.out.printf((PRINT_ARGS_FORMAT) + "%n", host, port, properties, main, backendsStr, reportDir, statsDir);
+        System.out.printf((PRINT_ARGS_FORMAT) + "%n", host, port, properties, clientsPerNode, main, backendsStr, reportDir, statsDir);
     }
 
     public String getHost() {
@@ -104,6 +111,10 @@ public class Arguments {
 
     public String getProperties() {
         return properties;
+    }
+
+    public int getClientsPerNode() {
+        return clientsPerNode;
     }
 
     public boolean isMain() {

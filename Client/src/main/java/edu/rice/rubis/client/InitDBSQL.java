@@ -209,7 +209,7 @@ public class InitDBSQL {
         int activeItems = rubis.getTotalActiveItems();
         int totalItems = oldItems + activeItems;
         String staticDescription = "This incredible item is exactly what you need !<br>It has a lot of very nice features including " +
-                "a coffee option.<p>It comes with a free license for the free RUBiS software, that's really cool. But RUBiS even if it " +
+                "a coffee option.<p>It comes with a free license for the free RUBiS software, thats really cool. But RUBiS even if it " +
                 "is free, is <B>(C) Rice University/INRIA 2001</B>. It is really hard to write an interesting generic description for " +
                 "automatically generated items, but who will really read this ?<p>You can also check some cool software available on " +
                 "http://sci-serv.inrialpes.fr. There is a very cool DSM system called SciFS for SCI clusters, but you will need some " +

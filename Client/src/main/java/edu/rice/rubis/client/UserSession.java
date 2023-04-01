@@ -524,15 +524,15 @@ public class UserSession extends Thread
         int    quantity;
         int    categoryId;
         String staticDescription = "This incredible item is exactly what you need !<br>It has a lot of very nice features including "+
-          "a coffee option.<br>It comes with a free license for the free RUBiS software, that's really cool. But RUBiS even if it "+
+          "a coffee option.<br>It comes with a free license for the free RUBiS software, thats really cool. But RUBiS even if it "+
           "is free, is <B>(C) Rice University/INRIA 2001</B>. It is really hard to write an interesting generic description for "+
           "automatically generated items, but who will really read this ?<br>You can also check some cool software available on "+
           "http://sci-serv.inrialpes.fr. There is a very cool DSM system called SciFS for SCI clusters, but you will need some "+
-          "SCI adapters to be able to run it ! Else you can still try CART, the amazing 'Cluster Administration and Reservation "+
-          "Tool'. All those software are open source, so don't hesitate ! If you have a SCI Cluster you can also try the Whoops! "+
+          "SCI adapters to be able to run it ! Else you can still try CART, the amazing Cluster Administration and Reservation "+
+          "Tool. All those software are open source, so dont hesitate ! If you have a SCI Cluster you can also try the Whoops! "+
           "clustered web server. Actually Whoops! stands for something ! Yes, it is a Web cache with tcp Handoff, On the fly "+
           "cOmpression, parallel Pull-based lru for Sci clusters !! Ok, that was a lot of fun but now it is starting to be quite late "+
-          "and I'll have to go to bed very soon, so I think if you need more information, just go on <h1>http://sci-serv.inrialpes.fr</h1> "+
+          "and Ill have to go to bed very soon, so I think if you need more information, just go on <h1>http://sci-serv.inrialpes.fr</h1> "+
           "or you can even try http://www.cs.rice.edu and try to find where Emmanuel Cecchet or Julie Marguerite are and you will "+
           "maybe get fresh news about all that !!<br>";
         int    staticDescriptionLength = staticDescription.length();

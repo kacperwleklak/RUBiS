@@ -1,0 +1,97 @@
+version: '3.8'
+
+# command
+#  /opt/java/openjdk/bin/java -cp /Client/RUBiS-client-emulator.jar edu.rice.rubis.client.ClientEmulator rubis-docker
+
+services:
+  client-1:
+    container_name: rubis-c-1
+    image: rubis/client
+    network_mode: host
+    build:
+      network: host
+    expose:
+      - "22"
+    environment:
+      - RUBIS_httpd_hostname=127.0.1.1
+      - RUBIS_httpd_port=80
+
+#  client-2:
+#    hostname: rubis-c-2
+#    container_name: rubis-c-2
+#    image: rubis/client
+#    network_mode: host
+#    ports:
+#      - "2222:22"
+#    environment:
+#      - RUBIS_httpd_hostname=127.0.1.1
+#      - RUBIS_httpd_port=82
+
+  php-apache-environment-1:
+    container_name: rubis-cluster-backend-1
+    image: rubis/backend
+    network_mode: host
+    build:
+      network: host
+    expose:
+      - "80"
+    volumes:
+      - ./PHP/:/var/www/html/PHP/
+    environment:
+      - RUBIS_DB_HOST=localhost
+      - RUBIS_DB_PORT=5432
+      - RUBIS_DB_HOST_TYPE=pgsql
+      - RUBIS_DB_USERNAME=user
+      - RUBIS_DB_PASSWORD=pass
+      - RUBIS_DB_DATABASE=db
+#
+#  php-apache-environment-2:
+#    container_name: rubis-cluster-backend-2
+#    image: rubis/backend
+#    network_mode: host
+#    volumes:
+#      - ./PHP/:/var/www/html/PHP/
+#    ports:
+#      - "82:80"
+#    environment:
+#      - RUBIS_DB_HOST=localhost
+#      - RUBIS_DB_PORT=5434
+#      - RUBIS_DB_HOST_TYPE=pgsql
+#      - RUBIS_DB_USERNAME=user
+#      - RUBIS_DB_PASSWORD=pass
+#      - RUBIS_DB_DATABASE=db
+#
+#  creek1:
+#    image: kacperwleklak/creek
+#    hostname: creek1
+#    networks:
+#      - host-network
+#    ports:
+#      - "10001:10001"
+#      - "8081:8080"
+#      - "5433:5432"
+#    environment:
+#      - PG_PORT=5432
+#      - DBNAME=creek
+#      - COMMUNICATION_REPLICAS_PORT=10001
+#      - COMMUNICATION_REPLICAS_HOST=localhost
+#      - SERVER_PORT=8080
+#      - COMMUNICATION_REPLICAS_NODES=localhost:10001,localhost:10001
+#      - COMMUNICATION_REPLICAS_ID=1
+#  creek2:
+#    image: kacperwleklak/creek
+#    hostname: creek2
+#    networks:
+#      - host-network
+#    ports:
+#      - "10002:10002"
+#      - "8082:8080"
+#      - "5434:5432"
+#    environment:
+#      - PG_PORT=5432
+#      - DBNAME=creek
+#      - COMMUNICATION_REPLICAS_PORT=10001
+#      - COMMUNICATION_REPLICAS_HOST=creek2
+#      - SERVER_PORT=8080
+#      - COMMUNICATION_REPLICAS_NODES=creek1:10001,creek2:10001
+#      - COMMUNICATION_REPLICAS_ID=2

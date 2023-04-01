@@ -2,11 +2,22 @@
 <html>
     <body>
         <?php
+
+        function post_or_get($index, $description) {
+            if (isset($_POST[$index])) {
+                return $_POST[$index];
+            } else if (isset($_GET[$index])) {
+                return $_GET[$index];
+            } else {
+                return null;
+            }
+        }
+
         $scriptName = "PutBidAuth.php";
         include("PHPprinter.php");
         $startTime = getMicroTime();
 
-        $itemId = $_POST['itemId'];
+        $itemId = post_or_get('itemId');
         if ($itemId == null) {
             $itemId = $_GET['itemId'];
             if ($itemId == null) {

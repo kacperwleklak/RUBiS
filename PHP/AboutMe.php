@@ -218,7 +218,7 @@
                 $endDate = $currentSellsRow["end_date"];
                 $startDate = $currentSellsRow["start_date"];
                 $itemId = $currentSellsRow["id"];
-                
+
                 $currentPrice = $currentSellsRow["max_bid"];
                 if ($currentPrice == null)
                     $currentPrice = "none";
@@ -252,8 +252,8 @@
                 $endDate = $pastSellsRow["end_date"];
                 $startDate = $pastSellsRow["start_date"];
                 $itemId = $pastSellsRow["id"];
-                
-                $currentPrice = $pastSellsResult["max_bid"];
+
+                $currentPrice = $pastSellsRow["max_bid"];
                 if ($currentPrice == null)
                     $currentPrice = "none";
 
@@ -275,10 +275,10 @@
             printHTMLHighlighted("<h3>Comments about you.</h3>\n");
             foreach ($commentsResult as $commentsRow) {
                 $authorId = $commentsRow["from_user_id"];
-                
-                
+
+
                 $authorResult = $DBQueries->selectUserById($authorId);
-                        
+
                 if (count($authorResult) == 0) {
                     $DBQueries = null;
                     die("ERROR: This author does not exist.<br>\n");
