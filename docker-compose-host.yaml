@@ -38,7 +38,7 @@ services:
     volumes:
       - ./PHP/:/var/www/html/PHP/
     environment:
-      - RUBIS_DB_HOST=localhost
+      - RUBIS_DB_HOST=192.168.1.11
       - RUBIS_DB_PORT=5432
       - RUBIS_DB_HOST_TYPE=pgsql
       - RUBIS_DB_USERNAME=user

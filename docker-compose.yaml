@@ -14,7 +14,7 @@ services:
     networks:
       - my-network
     environment:
-      - RUBIS_DB_HOST=192.168.1.3
+      - RUBIS_DB_HOST=192.168.1.11
       - RUBIS_DB_PORT=5433
       - RUBIS_DB_HOST_TYPE=pgsql
       - RUBIS_DB_USERNAME=user
